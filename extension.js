@@ -1,16 +1,10 @@
-import * as Main from 'gi://GnomeDesktop/Main';
-import * as GObject from 'gi://GObject/GObject';
-import * as Meta from 'gi://GnomeDesktop/Meta';
-import * as Shell from 'gi://GnomeDesktop/Shell';
-import * as Clutter from 'gi://Clutter/Clutter';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import GObject      from 'gi://GObject'
+import Meta      from 'gi://Meta'
+import Shell from 'gi://Shell';
+import Clutter      from 'gi://Clutter'
 
-import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
-const Self = Extension.metadata;
-
-
-
-
-const SHORTCUT = 'invert-window-shortcut';
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js'
 
 const TrueInvertWindowEffect = new GObject.registerClass({
 	Name: 'TrueInvertWindowEffect',
@@ -54,67 +48,41 @@ const TrueInvertWindowEffect = new GObject.registerClass({
 	}
 });
 
-function InvertWindow() {
-	this.settings = ExtensionUtils.getSettings(Self.metadata["settings-schema"]);
+export default class TrueColorWindowInvert extends Extension {
+    enable() {
+        let extensionSettings = this.getSettings();
+        this._toggleEffect = this._toggleEffect.bind(this);
+        Main.wm.addKeybinding(
+            'invert-window-shortcut',
+            extensionSettings,
+            Meta.KeyBindingFlags.NONE,
+            Shell.ActionMode.NORMAL,
+            this._toggleEffect
+        );
+    }
+
+    disable() {
+        Main.wm.removeKeybinding('invert-window-shortcut');
+        this._removeEffectFromAllWindows();
+    }
+
+    _toggleEffect() {
+        global.get_window_actors().forEach((actor) => {
+            let meta_window = actor.meta_window;
+            if (meta_window.has_focus()) {
+                if (actor.get_effect('invert-color')) {
+                    actor.remove_effect_by_name('invert-color');
+                } else {
+                    let effect = new TrueInvertWindowEffect();
+                    actor.add_effect_with_name('invert-color', effect);
+                }
+            }
+        });
+    }
+
+    _removeEffectFromAllWindows() {
+        global.get_window_actors().forEach((actor) => {
+            actor.remove_effect_by_name('invert-color');
+        });
+    }
 }
-
-InvertWindow.prototype = {
-	toggle_effect: function () {
-		global.get_window_actors().forEach(function (actor) {
-			let meta_window = actor.get_meta_window();
-			if (meta_window.has_focus()) {
-				if (actor.get_effect('invert-color')) {
-					actor.remove_effect_by_name('invert-color');
-					delete meta_window._invert_window_tag;
-				}
-				else {
-					let effect = new TrueInvertWindowEffect();
-					actor.add_effect_with_name('invert-color', effect);
-					meta_window._invert_window_tag = true;
-				}
-			}
-		}, this);
-	},
-
-	enable: function () {
-		Main.wm.addKeybinding(
-			SHORTCUT,
-			this.settings,
-			Meta.KeyBindingFlags.NONE,
-			Shell.ActionMode.NORMAL,
-			this.toggle_effect
-		);
-
-		global.get_window_actors().forEach(function (actor) {
-			let meta_window = actor.get_meta_window();
-			if (meta_window.hasOwnProperty('_invert_window_tag')) {
-				let effect = new TrueInvertWindowEffect();
-				actor.add_effect_with_name('invert-color', effect);
-			}
-		}, this);
-	},
-
-	disable: function () {
-		Main.wm.removeKeybinding(SHORTCUT);
-
-		global.get_window_actors().forEach(function (actor) {
-			actor.remove_effect_by_name('invert-color');
-		}, this);
-	}
-};
-
-let invert_window;
-
-function init() {
-}
-
-function enable() {
-	invert_window = new InvertWindow();
-	invert_window.enable();
-}
-
-function disable() {
-	invert_window.disable();
-	invert_window = null;
-}
-
