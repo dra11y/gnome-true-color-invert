@@ -1,3 +1,3 @@
-rm true-color-window-invert@lynet101.zip
+rm true-color-window-invert@dra11y.zip
 glib-compile-schemas schemas/
-zip true-color-window-invert@lynet101.zip  * **/* -x build.sh
+zip true-color-window-invert@dra11y.zip  * **/* -x build.sh
