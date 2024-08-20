@@ -146,7 +146,7 @@ export default class TrueColorWindowInvert extends Extension {
         // Restore patched methods
         WindowPreview.prototype._addWindow = this._orig_add_window
         WorkspaceThumbnail.prototype._addWindowClone = this._orig_add_window_clone
-        logger('TrueColorWindowInvert disabled');
+        logger('Extension disabled');
         Main.wm.removeKeybinding('invert-window-shortcut');
         this._removeEffectFromAllWindows();
         if (this._themeChangeSignalId) {
@@ -174,17 +174,17 @@ export default class TrueColorWindowInvert extends Extension {
     }
 
     _waitForWMClass(metaWindow, retries) {
-        logger('Waiting for WM_CLASS');
+        // logger('Waiting for WM_CLASS');
         if (metaWindow.get_wm_class() !== null || retries <= 0) {
-            logger('Window signal detected: ' + metaWindow.get_wm_class());
+            // logger('Window signal detected: ' + metaWindow.get_wm_class());
             if (metaWindow.get_wm_class() !== null) {
                 this._onWindowCreated(metaWindow);
             } else {
                 logger('Failed to get WM_CLASS after retries');
             }
         } else {
-            logger('Retrying to get WM_CLASS');
-            logger('Retries left: ' + retries);
+            // logger('Retrying to get WM_CLASS');
+            // logger('Retries left: ' + retries);
             GLib.timeout_add(GLib.PRIORITY_DEFAULT, 10, () => {
                 this._waitForWMClass(metaWindow, retries - 1);
                 return GLib.SOURCE_REMOVE;
